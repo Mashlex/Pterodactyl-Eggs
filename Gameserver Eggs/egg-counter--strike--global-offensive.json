@@ -1,0 +1,203 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v1",
+        "update_url": null
+    },
+    "exported_at": "2021-09-19T11:51:28+02:00",
+    "name": "Counter-Strike: Global Offensive",
+    "author": "exystic.xyz@gmail.com",
+    "description": "Counter-Strike: Global Offensive is a multiplayer first-person shooter video game developed by Hidden Path Entertainment and Valve Corporation.",
+    "features": null,
+    "images": [
+        "ghcr.io\/pterodactyl\/games:source"
+    ],
+    "file_denylist": [],
+    "startup": ".\/srcds_run -game csgo -console -usercon -autoupdate {{HLTV}} +sv_setsteamaccount {{STEAM_GST}} +ip 0.0.0.0 -strictportbind -port {{SERVER_PORT}} -clientport {{CLIENT_PORT}} -sport {{STEAM_PORT}} +tv_port {{GOTV_PORT}} -tickrate {{RATE}} -maxplayers_override {{SLOTS}} +servercfgfile server.cfg +game_type {{GTYPE}} +game_mode {{GMODE}} -authkey {{AUTH_KEY}} +host_workshop_collection {{WORKSHOP}}",
+    "config": {
+        "files": "{\r\n    \"\/csgo\/cfg\/server.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"hostname\": \"hostname \\\"{{server.build.env.HOSTNAME}}\\\"\",\r\n            \"rcon_password\": \"rcon_password \\\"{{server.build.env.RCON_PW}}\\\"\",\r\n            \"sv_password\": \"sv_password \\\"{{server.build.env.SV_PASS}}\\\"\",\r\n            \"sv_contact\": \"sv_contact \\\"{{server.build.env.SV_CONTACT}}\\\"\",\r\n            \"sv_region\": \"sv_region \\\"{{server.build.env.SV_REGION}}\\\"\",\r\n            \"tv_name\": \"tv_name \\\"{{server.build.env.TV_NAME}}\\\"\",\r\n            \"tv_password\": \"tv_password \\\"{{server.build.env.TV_PASS}}\\\"\",\r\n            \"tv_maxclients\": \"tv_maxclients \\\"{{server.build.env.TV_CLIENT}}\\\"\",\r\n            \"fps_max\": \"fps_max \\\"400\\\"\",\r\n            \"sv_minrate\": \"sv_minrate \\\"{{server.build.env.RATE}}000\\\"\",\r\n            \"sv_minupdaterate\": \"sv_minupdaterate \\\"{{server.build.env.RATE}}\\\"\",\r\n            \"sv_maxupdaterate\": \"sv_maxupdaterate \\\"{{server.build.env.RATE}}\\\"\",\r\n            \"sv_mincmdrate\": \"sv_mincmdrate \\\"{{server.build.env.RATE}}\\\"\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Connection to Steam servers successful\",\r\n    \"userInteraction\": []\r\n}",
+        "logs": "{\r\n    \"custom\": true,\r\n    \"location\": \"logs\/latest.log\"\r\n}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\n# Image to install with is 'ubuntu:18.04'\r\napt -y update\r\napt -y upgrade\r\napt -y --no-install-recommends install curl lib32gcc1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [ \"${STEAM_USER}\" == \"\" ]; then\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\nmkdir -p \/mnt\/server\/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n\r\n## install game using steamcmd\r\n.\/steamcmd.sh +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +force_install_dir \/mnt\/server +app_update 740 ${EXTRA_FLAGS} +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\necho\r\necho Server installed!\r\necho\r\n\r\n# writing some cfg files for the server\r\n\r\ncd \/mnt\/server\/csgo\/cfg\/\r\ncat <<EOF > server.cfg \r\n\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\r\n\/\/\/\/\/\/ CSGO Server.cfg \/\/\/\/\/\/ \r\n\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\r\n\r\n\/\/-------------------------------------------\r\n\/\/ Important Settings (DONT CHANGE IN CFG, ONLY IN PANEL\/STARTUP\/\r\n\/\/-------------------------------------------\r\nhostname \"CSGO Gameserver\" \r\n\/\/ The name of the server that will be displayed in the Server Browser\r\n\r\nrcon_password \"secretpassword11\" \r\n\/\/ The RCON password of the server that will allow admins to send commands to the server using Console Variables via Counter-Strike: Global Offensive's console.<br>Only you (the owner) should know this password!\r\n\r\nsv_password \"\" \r\n\/\/ The password of the server. Used to create private servers. (Leave blank to setup a public server)\r\n\r\nsv_contact \"default@email.com\" \r\n\/\/ Contact Email for server sysop\r\n\r\nsv_region \"255\" \r\n\/\/ The server will be displayed in the Server Browser for the selected region. Options: World = 255, USA - East = 0, USA - West = 1, South America = 2, Europe = 3, Asia = 4, Australia = 5, Middle East = 6, Africa = 7 \r\n\r\ntv_enable \"0\" \r\n\/\/Activate GOTV, if Enable is the Port Serverport+3\r\n\r\ntv_name \"CSGO TV\" \r\n\/\/ Name of the GOTV\r\n\r\ntv_password \"\" \r\n\/\/ Password of the GOTV, leave blank for no password\r\n\r\ntv_title \"This is a GOTV!\" \r\n\/\/ Sets a GOTV broadcast title shown in the spectator GUI.\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ Rates\r\n\/\/-------------------------------------------\r\nfps_max 400 \r\n\/\/ Maximum amount of available FPS (frames per second)\r\n\r\nsv_minrate 64000\r\n\/\/ Minimum bandwidth rate allowed. Special values: unlimited = 0 recommended: tickrate*1000\r\n\r\nsv_minupdaterate 64 \r\n\/\/ Minimum allowed updates per second, recommended: same like tickrate\r\n\r\nsv_maxupdaterate 64\r\n\/\/ Maximum allowed updates per second, recommended: same like tickrate\r\n\r\nsv_mincmdrate 64\r\n\/\/This sets the minimum value for cl_cmdrate. 0 == unlimited, recommended: same like tickrate\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ General settings\r\n\/\/-------------------------------------------\r\nsv_tags \"Deathmatch, Match, Training, Execute, Retake, Fun\" \r\n\/\/ Add tags, in addition to auto-generated ones\r\n\r\nsv_downloadurl \"\" \r\n\/\/ If you want new players to download the custom server's files (music, miscs, maps, etc.) from a remote server, type its root address here. Tutorial (https:\/\/forums.srcds.com\/viewtopic\/1077)\r\n\r\nsv_pure 1 \r\n\/\/ Modifies the allowed user content to be used in the server. Options: Allow any custom content = 0, Allow custom player textures, gun textures and sounds = 1, No custom content but only official = 2 \r\n\r\nsv_gravity 800 \r\n\/\/ Modifies the gravity. (Moon gravity = 600)\r\n\r\nsv_alltalk 1 \r\n\/\/ Enable\/disable letting both teams voice chat with each other. Options: Enable = 1, Disable = 0\r\n\r\nsv_deadtalk 1 \r\n\/\/ Enable\/disable dead players to talk to living players. Options: Enable = 1, Disable = 0\r\n\r\nmp_friendlyfire 1 \r\n\/\/ Enable\/disable \"Friendly fire\". (Teammates can kill each other). Options: Enable = 1, Disable = 0\r\n\r\nmp_tkpunish 0 \r\n\/\/ If enabled, a team-killer (TK) will be punished next round. Options: Enable = 1, Disable = 0\r\n\r\nmp_forcecamera 0 \r\n\/\/ If enabled, spectators will only be able to spectate their own team. Options: Enable = 1, Disable = 0\r\n\r\nsv_cheats 0 \r\n\/\/ NOT RECOMMENDED! After enabling cheating, achievements *cannot* be earned. Options: Enable = 1, Disable = 0\r\n\r\nsv_pausable 0 \r\n\/\/ NOT RECOMMENDED! Enable\/disable the ability to pause the server. Works only if \"sv_cheats\" is set to Enable. Options: Enable = 1, Disable = 0\r\n\r\nsv_voiceenable 1 \r\n\/\/ Allow voice chat. Options: Enable = 1, Disable = 0\r\n\r\nsv_allowupload 0 \r\n\/\/ Enable\/disable clients to upload customizations files. Options: Enable = 1, Disable = 0\r\n\r\nsv_allowdownload 1 \r\n\/\/ Enable\/disable ability for clients to downloadjs missing files. Options: Enable = 1, Disable = 0\r\n\r\nsv_forcepreload 1                        \r\n\/\/Force server side preloading\r\n\r\nsv_allow_wait_command 0 \r\n\/\/ Allow usage of \"wait\" command. Options: Enable = 1, Disable = 0\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ Logging\r\n\/\/-------------------------------------------\r\nlog on \r\n\/\/ Enable\/disable logging to file, console, and udp. Options: Enable = on, Disable = off\r\n\r\nsv_log_onefile 0 \r\n\/\/ Log server information to only one file. Options: Enable = 1, Disable = 0\r\n\r\nsv_logfile 1 \r\n\/\/ Log server information in the log file. Options: Enable = 1, Disable = 0\r\n\r\nsv_logbans 1 \r\n\/\/ Log server bans in the server logs. Options: Enable = 1, Disable = 0\r\n\r\nsv_logecho 1 \r\n\/\/ Enable\/disable echo log information to the console. Options: Enable = 1, Disable = 0\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ Round settings\r\n\/\/-------------------------------------------\r\nsv_infinite_ammo 0 \r\n\/\/ If enabled, players will never run out of ammo. Options: Enable = 1, Disable = 0\r\n\r\nmp_match_end_restart 0 \r\n\/\/ If enabled, the map will restart at the end of the round's limit. Options: Enable = 1, Disable = 0\r\n\r\nmp_afterroundmoney 0 \r\n\/\/ Amount of money awarded to each player after each round\r\n\r\nmp_teamcashawards 0 \r\n\/\/ If enabled, teams can earn money by performing in-game actions. Options: Enable = 1, Disable = 0\r\n\r\nmp_maxrounds 30 \r\n\/\/ Maximum amount of rounds per map\r\n\r\nmp_warmuptime 8 \r\n\/\/ How many seconds to allow new players to connect when a round starts?. Special values: Disable [don't delay, just start the round] = 0\r\n\r\nmp_roundtime 2 \r\n\/\/ Amount of minutes for the whole map\r\n\r\nmp_timelimit 0 \r\n\/\/ Amount of minutes for each round\r\n\r\nmp_win_panel_display_time 3 \r\n\/\/ Amount of seconds to show the win panel between matches \/ halves\r\n\r\nmp_freezetime 2 \r\n\/\/ Amount of seconds to keep players frozen when the round starts\r\n\r\nmp_buytime 45 \r\n\/\/ Players can buy items for this amount of seconds since the round has started\r\n\r\nmp_c4timer 45 \r\n\/\/ Once a C4 is equipped, it will blow in this amount of seconds\r\n\r\nmp_defuser_allocation 2 \r\n\/\/ How to allocate defusers to Counter Terrorists at the start of a round?. Options: No allocation = 0, Randomized = 1, Everyone = 2 \r\n\r\nmp_death_drop_defuser 1 \r\n\/\/ Drop defuser on a player's death?. Options: Enable = 1, Disable = 0\r\n\r\nmp_death_drop_grenade 2 \r\n\/\/ Which gun to drop upon a player's death?. Options: None = 0, Best = 1, Current = 2 \r\n\r\nmp_autoteambalance 0 \r\n\/\/ Enables\/disables automatic team balancing. Options: Enable = 1, Disable = 0\r\n\r\nmp_limitteams 0                           \r\n\/\/Max # of players 1 team can have over another (0 disables check)\r\n\r\nmp_halftime_duration 15                   \r\n\/\/Number of seconds that halftime lasts\r\n\r\nmp_force_pick_time \"15\"                     \r\n\/\/The amount of time a player has on the team screen to make a selection before being auto-teamed\r\n\r\nmp_playerid 0 \r\n\/\/ Controls what information the player sees in the status bar. Options: All names = 0, Team names = 1, No names = 2\r\n \r\nmp_playerid_delay 0 \r\n\/\/ Amount of seconds to delay showing information in the status bar\r\n\r\nmp_playerid_hold 0 \r\n\/\/ Amount of seconds to keep showing information in the status bar\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ Cash settings\r\n\/\/-------------------------------------------\r\nmp_startmoney 800 \r\n\/\/ Amount of money each player gets when they reset\r\n\r\nmp_maxmoney 16000 \r\n\/\/ Maximum amount of money a player is allowed to get\r\n\r\ncash_team_terrorist_win_bomb 2200 \r\n\/\/ If the terrorists will win by keeping the bomb from being eliminated\/defused, how much will they earn?\r\n\r\ncash_team_elimination_hostage_map 2200 \r\n\/\/ If a counter-terrorist will eliminate all the hostages, how much will he earn?\r\n\r\ncash_team_elimination_bomb_map 2200 \r\n\/\/ If the counter-terrorists will eliminate the bomb, how much will they earn?\r\n\r\ncash_team_win_by_defusing_bomb 2200 \r\n\/\/ If the counter-terrorists will defuse the bomb, how much will they earn?\r\n\r\ncash_team_planted_bomb_but_defused 200 \r\n\/\/ If the terrorists will plant a bomb, how much will the counter-terrorists earn for defusing it?\r\n\r\ncash_team_win_by_hostage_rescue 2200\r\n\/\/ If the counter-terrorists win by rescuing all the hostages, how much will they earn?\r\n\r\ncash_team_rescued_hostage 100 \r\n\/\/ If the counter-terrorists rescue a hostage, how much will they earn?\r\n\r\ncash_team_hostage_alive 0 \r\n\/\/ If a hostage is still alive, how much will the counter-terrorists earn?\r\n\r\ncash_team_hostage_interaction 50 \r\n\/\/ If the counter-terrorists have managed to save some hostages, how much will they earn?\r\n\r\ncash_team_loser_bonus 2000 \r\n\/\/ How much will the loser team earn?\r\n\r\ncash_team_loser_bonus_consecutive_rounds 500 \r\n\/\/ In consecutive rounds, how much will the loser team earn?\r\n\r\ncash_player_killed_teammate -3300 \r\n\/\/ If a player has killed a member of his team, how much will he lose?\r\n\r\ncash_player_killed_enemy_default 200 \r\n\/\/ When a player kills an enemy, how much will he earn?\r\n\r\ncash_player_killed_enemy_factor 0.5 \r\n\/\/ When a player kills an enemy, by what factor will he earn more every time?\r\n\r\ncash_player_bomb_planted 200 \r\n\/\/ When a terrorist plants a bomb, how much will he earn of it?\r\n\r\ncash_player_bomb_defused 200 \r\n\/\/ When a counter-terrorist defuses a bomb, how much will he earn of it?\r\n\r\ncash_player_rescued_hostage 200 \r\n\/\/ When a counter-terrorist rescues a hostage, how much will he earn?\r\n\r\ncash_player_interact_with_hostage 0 \r\n\/\/ When a counter-terrorist interacts with a hostage, how much will he earn?\r\n\r\ncash_player_damage_hostage -30 \r\n\/\/ When a counter-terrorist harms a hostage, how much will he lose?\r\n\r\ncash_player_killed_hostage -100 \r\n\/\/ When a counter-terrorist kills a hostage, how much will he lose?\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ Voting\r\n\/\/-------------------------------------------\r\nsv_allow_votes \"1\"                          \r\n\/\/Allow voting?\r\n\r\nsv_vote_allow_spectators 0 \r\n\/\/ Enable\/disable the spectators' ability to vote. Options: Enable = 1, Disable = 0\r\n\r\nsv_vote_command_delay 2 \r\n\/\/ After a vote has successfully passed, how many minutes to wait until the text happens?\r\n\r\nsv_vote_failure_timer 300 \r\n\/\/ If a player calls a vote but it fails, he has to wait for  this amount of seconds before re-calling a vote\r\n\r\nsv_vote_quorum_ratio 0 \r\n\/\/ The minimum ratio of players need to vote on an issue to resolve it\r\n\r\nsv_vote_timer_duration 15 \r\n\/\/ Amount of time that a vote lasts in\r\n\r\nmp_endmatch_votenextmap 1 \r\n\/\/ If enabled, players will be able to vote for the next map at the end. Options: Enable = 1, Disable = 0\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ The Bot Convars\r\n\/\/-------------------------------------------\r\nbot_difficulty 3                           \r\n\/\/Defines the skill of bots joining the game.  Values are: 0=easy, 1=normal, 2=hard, 3=expert.\r\n\r\nbot_chatter \"off\"                          \r\n\/\/Control how bots talk. Allowed values: 'off', 'radio', 'minimal', or 'normal\r\n\r\nbot_join_after_player 1                    \r\n\/\/If nonzero, bots wait until a player joins before entering the game.\r\n\r\nbot_quota 20                               \r\n\/\/Determines the total number of bots in the game.\r\n\r\nbot_quota_mode \"fill\"                      \r\n\/\/Determines the type of quota. Allowed values: 'normal', 'fill', and 'match\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ GOTV\r\n\/\/-------------------------------------------\r\ntv_autorecord \"0\" \r\n\/\/ Activated the record automatic record function \r\n\r\ntv_maxclients \"10\" \r\n\/\/ The amount of clients to connect to the GOTV\r\n\r\ntv_delay \"90\" \r\n\/\/ The Delay of the GOTV in seconds\r\n\r\ntv_advertise_watchable 1 \r\n\/\/GOTV advertises the match as watchable via game UI, clients watching via UI will not need to type password. Game servers with GOTV enabled and GOTV relays that need to support external clients connecting on GOTV port must set this to 1.\r\n\r\ntv_delaymapchange \"1\" \r\n\/\/ Delays the map change on game server until rest of buffered game has been broadcasted\r\n\r\ntv_allow_static_shots \"1\" \r\n\/\/ Allows auto-director to choose fixed camera shots.\r\n\r\ntv_relaytextchat \"1\" \r\n\/\/ Relay text chat data: 0=off, 1=say, 2=say+say_team\r\n\r\ntv_chatgroupsize \"0\" \r\n\/\/ Set chat group size to n spectators. Only spectators in the same chat group can speak to each other. Chat groups are turned off with \"tv_chatgroupsize 0\" and everybody can speak to everybody. Setting chat groups helps reducing chatter noise and saves some bandwidth.\r\n\r\n\r\n\/\/-------------------------------------------\r\n\/\/ EXEC\r\n\/\/-------------------------------------------\r\nexec banned_user.cfg\r\nexec banned_ip.cfg\r\nwriteid\r\nwriteip\r\n\r\nEOF\r\n\r\necho server.cfg has been written!\r\n\r\ncat <<EOF > gamemode_casual_server.cfg\r\nbot_quota_mode fill\r\nbot_quota 10\r\nbot_defer_to_human_items 1\r\nbot_defer_to_human_goals 0\r\nbot_difficulty 1\r\nbot_chatter\tnormal\r\nmp_friendlyfire\t1\r\nff_damage_reduction_grenade\t0\r\nff_damage_reduction_bullets\t0\r\nff_damage_reduction_other 0\r\nff_damage_reduction_grenade_self 0\r\nmp_afterroundmoney 0\r\nmp_playercashawards 1\r\nmp_teamcashawards 1\r\nmp_maxrounds 15\r\nmp_halftime 0\r\nmp_timelimit 0\r\nmp_roundtime 3\r\nmp_freezetime 5\r\nmp_buytime 45\r\n\r\nmp_forcecamera 0\t\t\t\r\n\/\/ Set to 1 for team only spectating.\r\n\r\nmp_defuser_allocation 2\t\t\t\r\n\/\/ 0=none, 1=random, 2=everyone\r\n\r\nmp_death_drop_gun 1\t\t\t\r\n\/\/ 0=none, 1=best, 2=current or best\r\n\r\nmp_death_drop_grenade 2\t\r\n\/\/ 0=none, 1=best, 2=current or best\r\n\r\nmp_death_drop_defuser 1\t\r\nsv_ignoregrenaderadio 0\r\nmp_molotovusedelay 0\r\nsv_alltalk 1\r\nsv_deadtalk\t0\r\nmp_force_pick_time 15\r\n\r\nbot_autodifficulty_threshold_low -2.0 \r\n\/\/ Value between -20.0 and 20.0 (Amount below avg human contribution score, below which a bot should raise its difficulty)\r\n\r\nbot_autodifficulty_threshold_high 0.0 \r\n\/\/ Value between -20.0 and 20.0 (Amount above avg human contribution score, above which a bot should lower its difficulty)\r\n\r\nspec_freeze_time 5.0\r\nspec_freeze_panel_extended_time 0\r\n\r\nmp_match_can_clinch\t1\t\t\t\r\n\/\/ 0=No mercy rule, 1=team can clinch match win early if they win > 1\/2 total rounds\r\n\r\nmp_startmoney 1000\r\nmp_maxmoney 10000\r\n\r\nsv_allow_votes 1\t\t\r\n\/\/ Voting allowed in this mode\r\n\r\nsv_arms_race_vote_to_restart_disallowed_after 0\r\n\r\n\/\/ cash award convars\r\ncash_team_terrorist_win_bomb 2700\r\ncash_team_elimination_bomb_map 2700\r\ncash_team_win_by_defusing_bomb 2700\r\ncash_team_win_by_hostage_rescue 2700\r\ncash_team_loser_bonus 2400\r\ncash_team_loser_bonus_consecutive_rounds 0\r\ncash_team_rescued_hostage 100\r\ncash_team_hostage_alive 0\r\ncash_team_planted_bomb_but_defused 200\r\ncash_team_hostage_interaction 50\r\ncash_player_killed_teammate -3300\r\ncash_player_killed_enemy_default 200\r\ncash_player_killed_enemy_factor 0.5\r\ncash_player_bomb_planted 200\r\ncash_player_bomb_defused 200\r\ncash_player_rescued_hostage 200\r\ncash_player_interact_with_hostage 0\r\ncash_player_damage_hostage -30\r\ncash_player_killed_hostage -1000\r\n\r\n\/\/ gungame tr defaults (not used in this mode)\r\nmp_ggtr_bomb_respawn_delay 0\r\nmp_ggtr_bomb_detonation_bonus 1\r\nmp_ggtr_bomb_defuse_bonus 1\r\nmp_ggtr_bomb_pts_for_upgrade 2\r\nmp_ggtr_bomb_pts_for_he 3\r\nmp_ggtr_bomb_pts_for_flash 4\r\nmp_ggtr_bomb_pts_for_molotov 5\r\nmp_ggtr_halftime_delay 0.0\r\nmp_ggtr_end_round_kill_bonus 1\r\nmp_ggtr_last_weapon_kill_ends_half 0\r\n\r\n\/\/ gungame progressive defaults (not used in this mode)\r\nmp_ggprogressive_round_restart_delay 15\r\n\r\nmp_weapons_allow_zeus 1\r\nmp_solid_teammates 0\r\nmp_free_armor 1\t\t\r\n\r\nEOF\r\n\r\necho gamemode_casual_server.cfg has been written!\r\n\r\n# Script for Autoupdate\r\ncd \/mnt\/server\/\r\ncat <<EOF > update.txt\r\n\/\/ update.txt\r\n\/\/\r\n@ShutdownOnFailedCommand 1 \/\/set to 0 if updating multiple servers at once\r\n@NoPromptForPassword 1\r\nlogin anonymous \r\nforce_install_dir ..\/\r\napp_update 740\r\nquit\r\nEOF\r\n\r\necho update.txt has been written!\r\necho\r\n\r\n# fix the default parameter in scrds_run\r\nsed -i -e '49s\/RESTART=\"yes\"\/RESTART=\"\"\/g' \/mnt\/server\/srcds_run\r\necho Fix Restart disabled by default in scrds_run!\r\nsed -i -e '62s\/AUTO_UPDATE=\"\"\/AUTO_UPDATE=\"yes\"\/g' \/mnt\/server\/srcds_run\r\necho Fix Autostart enabled by default in scrds_run!\r\nsed -i -e '63s!STEAM_DIR=\"\"!STEAM_DIR=\"\/home\/container\/steamcmd\"!g' \/mnt\/server\/srcds_run\r\necho Set STEAM_DIR by default in scrds_run!\r\nsed -i -e '64s!STEAMCMD_SCRIPT=\"\"!STEAMCMD_SCRIPT=\"\/home\/container\/update.txt\"!g' \/mnt\/server\/srcds_run\r\necho Fix STEAMCMD_SCRIPT enabled by default in scrds_run!\r\nsed -i -e '119s\/RESTART=\"yes\" ;;\/RESTART=\"\" ;;\/g' \/mnt\/server\/srcds_run\r\necho Fix Updatefunction enabled by default in scrds_run!\r\nsed -i -e 's\/steam.sh +runscript $STEAMCMD_SCRIPT\"\/steamcmd.sh +runscript $STEAMCMD_SCRIPT\"\/g' \/mnt\/server\/srcds_run\r\necho Fix Update Bug!\r\necho\r\n\r\n# Installing Metamod\r\necho Installing Metamod!\r\necho Wait some minutes!\r\ncd \/mnt\/server\/csgo\/\r\ncurl -# -sSL -o metamod.tar.gz https:\/\/mms.alliedmods.net\/mmsdrop\/1.11\/mmsource-1.11.0-git1145-linux.tar.gz  # maybe update url or chance to windows\r\ntar -xzvf metamod.tar.gz\r\nrm metamod.tar.gz\r\necho\r\necho Metamod is installed!\r\necho\r\n# Installing Sourcemod\r\necho Installing Sourcemod!\r\necho Wait some minutes!\r\ncd \/mnt\/server\/csgo\/\r\ncurl -# -sSL -o sourcemod.tar.gz https:\/\/sm.alliedmods.net\/smdrop\/1.10\/sourcemod-1.10.0-git6510-linux.tar.gz  # maybe update url or chance to windows\r\ntar -xzvf sourcemod.tar.gz\r\nrm sourcemod.tar.gz\r\necho\r\necho Sourcemod is installed!\r\necho\r\necho Server is Ready to Start!\r\necho\r\necho Now you can start the Server!\r\necho Now you can start the Server!\r\necho Now you can start the Server!\r\necho Now you can start the Server!\r\necho Now you can start the Server!",
+            "container": "ghcr.io\/pterodactyl\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Game Server Token",
+            "description": "The Steam Account Token required for the server to be displayed publicly. https:\/\/steamcommunity.com\/dev\/managegameservers",
+            "env_variable": "STEAM_GST",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:32"
+        },
+        {
+            "name": "Client Port",
+            "description": "Serverport + 1 \r\nADMIN ONLY!",
+            "env_variable": "CLIENT_PORT",
+            "default_value": "27005",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|numeric|max:50000"
+        },
+        {
+            "name": "VAC Port (Steam)",
+            "description": "Serverport + 2 \r\nADMIN ONLY!",
+            "env_variable": "STEAM_PORT",
+            "default_value": "26900",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|numeric|max:50000"
+        },
+        {
+            "name": "GOTV Port",
+            "description": "Serverport + 3 \r\nIf is this enabled, you can use that port to join the GOTV.",
+            "env_variable": "GOTV_PORT",
+            "default_value": "27020",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:50000"
+        },
+        {
+            "name": "Tickrate",
+            "description": "The tick rate of the server, according to the possibilities of the order. 64 or 128 are possible. \r\nORDER CONFIG!",
+            "env_variable": "RATE",
+            "default_value": "64",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|in:64,128"
+        },
+        {
+            "name": "Slots",
+            "description": "The amount of players, who can join the server. \r\nORDER CONFIG!",
+            "env_variable": "SLOTS",
+            "default_value": "12",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:32"
+        },
+        {
+            "name": "Servername",
+            "description": "This is the servername.",
+            "env_variable": "HOSTNAME",
+            "default_value": "CSGO Gameserver",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:30"
+        },
+        {
+            "name": "Rcon Password",
+            "description": "Rcon Password to control the Server online. For your security, change the password.",
+            "env_variable": "RCON_PW",
+            "default_value": "secretpassword11",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|min:8"
+        },
+        {
+            "name": "Server Password",
+            "description": "This is the password to join the server. If the field is left empty, you can join the server without a password.",
+            "env_variable": "SV_PASS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:20"
+        },
+        {
+            "name": "Contact E-Mail",
+            "description": "The contact email of the server admin.",
+            "env_variable": "SV_CONTACT",
+            "default_value": "default@email.com",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|email|max:40"
+        },
+        {
+            "name": "Gametype",
+            "description": "Select the Gametype and the Gamemode to chance mode , which do you want to play.\r\nType\/Mode: Casual: 0\/0 | Competitive: 0\/1 | Scrim Competitive 2v2: 0\/2 | Scrim Competitive 5v5: 0\/2 | Arms Race: 1\/0 | Demolition: 1\/1 | Deathmatch: 1\/2 | Training: 2\/0 | Custom: 3\/0 | Cooperative: 4\/0 | Skirmish: 5\/0",
+            "env_variable": "GTYPE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|in:0,1,2,3,4,5"
+        },
+        {
+            "name": "Gamemode",
+            "description": "Select the Gametype and the Gamemode to chance mode , which do you want to play.\r\nType\/Mode: Casual: 0\/0 | Competitive: 0\/1 | Scrim Competitive 2v2: 0\/2 | Scrim Competitive 5v5: 0\/2 | Arms Race: 1\/0 | Demolition: 1\/1 | Deathmatch: 1\/2 | Training: 2\/0 | Custom: 3\/0 | Cooperative:4\/0 | Skirmish: 5\/0",
+            "env_variable": "GMODE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|in:0,1,2"
+        },
+        {
+            "name": "HLTV",
+            "description": "Leave Blank to activate GOTV. ORDER CONFIG!",
+            "env_variable": "HLTV",
+            "default_value": "-nohltv",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "in:,-nohltv"
+        },
+        {
+            "name": "GOTV Name",
+            "description": "The displayed name when the GOTV is called.",
+            "env_variable": "TV_NAME",
+            "default_value": "CSGO TV",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:30"
+        },
+        {
+            "name": "GOTV Password",
+            "description": "This is the password to join the GOTV. If the field is left blank, you can join the GOTV without a password.",
+            "env_variable": "TV_PASS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:30"
+        },
+        {
+            "name": "GOTV Title",
+            "description": "This is the description of the GOTV stream.",
+            "env_variable": "TV_TITLE",
+            "default_value": "This is a GOTV!",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:40"
+        },
+        {
+            "name": "GOTV Slots",
+            "description": "This is the number of slots that can join the GOTV. \r\nORDER CONFIG!",
+            "env_variable": "TV_CLIENT",
+            "default_value": "10",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:32"
+        },
+        {
+            "name": "API Authentification Key",
+            "description": "Key to use the Steam Workshop. https:\/\/steamcommunity.com\/login\/home\/?goto=%2Fdev%2Fapikey\r\nYou must use the adress of the Gameserver without port.",
+            "env_variable": "AUTH_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:32"
+        },
+        {
+            "name": "Workshop Collection ID",
+            "description": "If you want to use workshop items, you need to add the ID of the collection.",
+            "env_variable": "WORKSHOP",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:20"
+        }
+    ]
+}
