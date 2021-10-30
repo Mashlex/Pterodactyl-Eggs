@@ -1,0 +1,14 @@
+# fix the default parameter in scrds_run
+sed -i -e '49s/RESTART="yes"/RESTART=""/g' /mnt/server/srcds_run
+echo Fix Restart disabled by default in scrds_run!
+sed -i -e '62s/AUTO_UPDATE=""/AUTO_UPDATE="yes"/g' /mnt/server/srcds_run
+echo Fix Autostart enabled by default in scrds_run!
+sed -i -e '63s!STEAM_DIR=""!STEAM_DIR="/home/container/steamcmd"!g' /mnt/server/srcds_run
+echo Set STEAM_DIR by default in scrds_run!
+sed -i -e '64s!STEAMCMD_SCRIPT=""!STEAMCMD_SCRIPT="/home/container/update.txt"!g' /mnt/server/srcds_run
+echo Fix STEAMCMD_SCRIPT enabled by default in scrds_run!
+sed -i -e '119s/RESTART="yes" ;;/RESTART="" ;;/g' /mnt/server/srcds_run
+echo Fix Updatefunction enabled by default in scrds_run!
+sed -i -e 's/steam.sh +runscript $STEAMCMD_SCRIPT"/steamcmd.sh +runscript $STEAMCMD_SCRIPT"/g' /mnt/server/srcds_run
+echo Fix Update Bug!
+echo
