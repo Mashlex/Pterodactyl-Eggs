@@ -5,17 +5,9 @@ if [ -z ${TS_VERSION} ] || [ ${TS_VERSION} == latest ]; then
 fi
 
 # get installed version from version_installed.txt
-INSTALLED_VERSION=$(cat version_installed.txt)
+INSTALLED_VERSION=$(cat version.txt)
 echo "Installed TeamSpeak3 Version: $INSTALLED_VERSION"
 
-# check if there is a static version set in pterodactyl panel
-. "version_static.txt"
-STATIC_VERSION=0
-if ! [ "$SERVER_VERSION" = "undefined" ] && ! [ "$SERVER_VERSION" = 0 ];
-then
-    STATIC_VERSION=1
-    echo "Server is set to static version: $SERVER_VERSION"
-fi
 
 updateToVersion() {
     TSVERSION=$1
@@ -40,7 +32,7 @@ updateToVersion() {
     echo 'version written into version_installed.txt file'
 }
 
-if [ "$LATEST_VERSION" != "$INSTALLED_VERSION" ] && [ "$STATIC_VERSION" = 0 ];
+if [ "$LATEST_VERSION" != "$INSTALLED_VERSION" ];
 then
     updateToVersion "$LATEST_VERSION"
 elif [ "$SERVER_VERSION" != "$INSTALLED_VERSION" ] && [ "$STATIC_VERSION" = 1 ];
@@ -57,4 +49,4 @@ if [ ! -f ts3server.ini ]; then
 fi
 
 echo 'starting server...'
-./ts3server_minimal_runscript.sh inifile=ts3server.ini
+./ts3server_startscript.sh start inifile=ts3server.ini
