@@ -20,5 +20,5 @@ This is an extended standard egg for the open source game server management tool
 * more startoptions
 * more variables
 
-~~ ### Sinusbot~~
-~~ ### TS3 Manager~~
+~~Sinusbot~~
+~~TS3 Manager~~
