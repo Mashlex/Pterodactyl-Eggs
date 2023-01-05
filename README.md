@@ -11,4 +11,5 @@ This is an extended standard egg for the open source game server management tool
 * ~~Sinusbot~~
 * ~~TS3 Manager~~
 
+---
 ![Image](https://github.com/Mashlex/Pterodactyl-Eggs/blob/b2e2f6e5685637bf565f52f8ec53508fdddec43f/img/csgo-optionen.gif)
