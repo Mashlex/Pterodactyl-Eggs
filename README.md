@@ -5,12 +5,12 @@ This is an extended standard egg for the open source game server management tool
 * [Orginal Eggs](https://github.com/parkervcp/eggs)
 
 ## Game Eggs
-* Counter Strike: Globale Offensive
-	- install some important config files from other [Git](https://github.com/Mashlex/CSGO-Server-Setup)
-	- more startoptions
-	- more variables
-* Minecraft Vanila
-	- more variables
+| Counter Strike: Globale Offensive | There are some additional start options, 
+such as tickrate, workshop ID, game mode, game type, and skirmish ID. In addition, 
+[configs](https://github.com/Mashlex/CSGO-Server-Setup) are added during installation 
+which are not installed by default. Many of the parameters are set under the variables. |
+
+| Minecraft Vanila | more variables |
 * Valheim
  	- more startoptions
 	- more variables
