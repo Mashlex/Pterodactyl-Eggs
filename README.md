@@ -4,6 +4,7 @@ This is an extended standard egg for the open source game server management tool
 * [Pterodactyl Project](https://pterodactyl.io/)
 * [Original Eggs](https://github.com/parkervcp/eggs)
 
+
 | Eggname | Description |
 |------------------------------|--------------------------------------------------------------------|
 | [Counter Strike: Globale Offensive](https://blog.counter-strike.net/) | There are some additional start options, such as tickrate, workshop ID, game mode, game type, and skirmish ID. In addition, [configs](https://github.com/Mashlex/CSGO-Server-Setup) are added during installation which are not installed by default. Many of the parameters are set under the variables. |
