@@ -6,15 +6,15 @@ This is an extended standard egg for the open source game server management tool
 	- more startoptions
 	- more variables
 * Minecraft Vanila
-*	more variables
+	- more variables
 * Valheim
-* 	more startoptions
-* 	more variables
+ 	- more startoptions
+	- more variables
 
 ## Tool Eggs
 * Teamspeak 3
-*	more startoptions
-*	more variables
+ 	- more startoptions
+ 	- more variables
 * ~~Sinusbot~~
 * ~~TS3 Manager~~
 
