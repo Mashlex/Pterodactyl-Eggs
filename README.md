@@ -3,8 +3,8 @@ This is an extended standard egg for the open source game server management tool
 
 ## Game Eggs
 * Counter Strike: Globale Offensive
-*	more startoptions
-*	more variables
+	- more startoptions
+	- more variables
 * Minecraft Vanila
 *	more variables
 * Valheim
