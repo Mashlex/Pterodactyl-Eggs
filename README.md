@@ -6,7 +6,7 @@ This is an extended standard egg for the open source game server management tool
 
 ## Game Eggs
 * Counter Strike: Globale Offensive
-	- install some important config files
+	- install some important config files from other [Git](https://github.com/Mashlex/CSGO-Server-Setup)
 	- more startoptions
 	- more variables
 * Minecraft Vanila
