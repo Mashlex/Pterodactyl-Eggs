@@ -1,8 +1,12 @@
 # Pterodactyl Eggs
 This is an extended standard egg for the open source game server management tool Pterodactyl.
 
+* [Pterodactyl Project](https://pterodactyl.io/)
+* [Offical Eggs](https://github.com/parkervcp/eggs)
+
 ## Game Eggs
 * Counter Strike: Globale Offensive
+	- install some important config files
 	- more startoptions
 	- more variables
 * Minecraft Vanila
