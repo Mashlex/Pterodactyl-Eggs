@@ -4,7 +4,7 @@
         "version": "PTDL_v2",
         "update_url": null
     },
-    "exported_at": "2023-01-09T19:43:19+01:00",
+    "exported_at": "2023-02-11T19:01:00+01:00",
     "name": "Counter-Strike: Global Offensive",
     "author": "support@pterodactyl.io",
     "description": "Counter-Strike: Global Offensive is a multiplayer first-person shooter video game developed by Hidden Path Entertainment and Valve Corporation.",
@@ -16,9 +16,9 @@
         "ghcr.io\/pterodactyl\/games:source": "ghcr.io\/pterodactyl\/games:source"
     },
     "file_denylist": [],
-    "startup": ".\/srcds_run -game csgo -console -usercon -norestart -strictportbind -port {{SERVER_PORT}} -clientport {{CLIENT_PORT}} -steamport {{STEAM_PORT}} +tv_port {{GOTV_PORT}} +ip 0.0.0.0 +sv_setsteamaccount {{STEAM_ACC}} -tickrate {{RATE}} -maxplayers_override {{SLOTS}} +game_type {{GTYPE}} +game_mode {{GMODE}} +sv_skirmish_id {{SKIRMISH}} +servercfg server.cfg +map {{SRCDS_MAP}} {{HLTV}} +sv_setsteamaccount {{AUTH_KEY}} +workshop_collection {{WORKSHOP}}",
+    "startup": ".\/srcds_run -game csgo -console -usercon -norestart -strictportbind -port {{SERVER_PORT}} -clientport {{CLIENT_PORT}} -steamport {{STEAM_PORT}} +tv_port {{GOTV_PORT}} +ip 0.0.0.0 +sv_setsteamaccount {{STEAM_ACC}} -tickrate {{RATE}} -maxplayers_override {{SLOTS}} +game_type {{GTYPE}} +game_mode {{GMODE}} +sv_skirmish_id {{SKIRMISH}} +servercfg server.cfg +map {{SRCDS_MAP}} {{HLTV}} -authkey {{AUTH_KEY}} +host_workshop_collection  {{WORKSHOP}} +workshop_start_map {{SRCDS_MAP}}",
     "config": {
-        "files": "{\r\n    \"\/csgo\/cfg\/server.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"hostname\": \"hostname \\\"{{server.build.env.HOSTNAME}}\\\"\",\r\n            \"rcon_password\": \"rcon_password \\\"{{server.build.env.RCON_PW}}\\\"\",\r\n            \"sv_password\": \"sv_password \\\"{{server.build.env.SV_PASS}}\\\"\",\r\n            \"sv_contact\": \"sv_contact \\\"{{server.build.env.SV_CONTACT}}\\\"\",\r\n            \"sv_region\": \"sv_region \\\"{{server.build.env.SV_REGION}}\\\"\",\r\n            \"tv_name\": \"tv_name \\\"{{server.build.env.TV_NAME}}\\\"\",\r\n            \"tv_password\": \"tv_password \\\"{{server.build.env.TV_PASS}}\\\"\",\r\n            \"tv_maxclients\": \"tv_maxclients \\\"{{server.build.env.TV_CLIENT}}\\\"\",\r\n            \"fps_max\": \"fps_max \\\"400\\\"\",\r\n            \"sv_minrate\": \"sv_minrate {{server.build.env.RATE}}000\",\r\n            \"sv_minupdaterate\": \"sv_minupdaterate {{server.build.env.RATE}}\",\r\n            \"sv_maxupdaterate\": \"sv_maxupdaterate {{server.build.env.RATE}}\",\r\n            \"sv_mincmdrate\": \"sv_mincmdrate {{server.build.env.RATE}}\",\r\n            \"sv_tags \": \"sv_tags \\\"{{server.build.env.TAGS}},ztormax\\\"\",\r\n            \"bot_quota \": \"bot_quota \\\"{{server.build.env.SLOTS}}\\\"\"\r\n        }\r\n    }\r\n}",
+        "files": "{\r\n    \"\/csgo\/cfg\/server.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"hostname\": \"hostname \\\"{{server.build.env.HOSTNAME}}\\\"\",\r\n            \"rcon_password\": \"rcon_password \\\"{{server.build.env.RCON_PW}}\\\"\",\r\n            \"sv_password\": \"sv_password \\\"{{server.build.env.SV_PASS}}\\\"\",\r\n            \"sv_contact\": \"sv_contact \\\"{{server.build.env.SV_CONTACT}}\\\"\",\r\n            \"sv_region\": \"sv_region \\\"{{server.build.env.SV_REGION}}\\\"\",\r\n            \"tv_name\": \"tv_name \\\"{{server.build.env.TV_NAME}}\\\"\",\r\n            \"tv_password\": \"tv_password \\\"{{server.build.env.TV_PASS}}\\\"\",\r\n            \"tv_maxclients\": \"tv_maxclients \\\"{{server.build.env.TV_CLIENT}}\\\"\",\r\n            \"fps_max\": \"fps_max \\\"400\\\"\",\r\n            \"sv_minrate\": \"sv_minrate {{server.build.env.RATE}}000\",\r\n            \"sv_minupdaterate\": \"sv_minupdaterate {{server.build.env.RATE}}\",\r\n            \"sv_maxupdaterate\": \"sv_maxupdaterate {{server.build.env.RATE}}\",\r\n            \"sv_mincmdrate\": \"sv_mincmdrate {{server.build.env.RATE}}\",\r\n            \"sv_tags \": \"sv_tags \\\"{{server.build.env.TAGS}},ztormax\\\"\"\r\n        }\r\n    }\r\n}",
         "startup": "{\r\n    \"done\": \"Connection to Steam servers successful\"\r\n}",
         "logs": "{}",
         "stop": "quit"
@@ -95,7 +95,7 @@
             "name": "Slots",
             "description": "The amount of players, who can join the server. \r\nORDER CONFIG!",
             "env_variable": "SLOTS",
-            "default_value": "10",
+            "default_value": "16",
             "user_viewable": true,
             "user_editable": false,
             "rules": "required|numeric|max:32",
@@ -153,12 +153,12 @@
         },
         {
             "name": "Startmap",
-            "description": "This is the Startmap.",
+            "description": "This is the Startmap. If you added a Workshop Collection, you must enter the Map ID.",
             "env_variable": "SRCDS_MAP",
             "default_value": "de_dust2",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|string|alpha_dash",
+            "rules": "required|string",
             "field_type": "text"
         },
         {
@@ -168,7 +168,7 @@
             "default_value": "0",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|numeric|in:0,1,2,3,4,5",
+            "rules": "required|numeric|in:0,1,2,3,4,5,6",
             "field_type": "text"
         },
         {
