@@ -1,0 +1,265 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2023-02-11T19:01:00+01:00",
+    "name": "Counter-Strike: Global Offensive",
+    "author": "support@pterodactyl.io",
+    "description": "Counter-Strike: Global Offensive is a multiplayer first-person shooter video game developed by Hidden Path Entertainment and Valve Corporation.",
+    "features": [
+        "gsl_token",
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "ghcr.io\/pterodactyl\/games:source": "ghcr.io\/pterodactyl\/games:source"
+    },
+    "file_denylist": [],
+    "startup": ".\/srcds_run -game csgo -console -usercon -norestart -strictportbind -port {{SERVER_PORT}} -clientport {{CLIENT_PORT}} -steamport {{STEAM_PORT}} +tv_port {{GOTV_PORT}} +ip 0.0.0.0 +sv_setsteamaccount {{STEAM_ACC}} -tickrate {{RATE}} -maxplayers_override {{SLOTS}} +game_type {{GTYPE}} +game_mode {{GMODE}} +sv_skirmish_id {{SKIRMISH}} +servercfg server.cfg +map {{SRCDS_MAP}} {{HLTV}} -authkey {{AUTH_KEY}} +host_workshop_collection  {{WORKSHOP}} +workshop_start_map {{SRCDS_MAP}}",
+    "config": {
+        "files": "{\r\n    \"\/csgo\/cfg\/server.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"hostname\": \"hostname \\\"{{server.build.env.HOSTNAME}}\\\"\",\r\n            \"rcon_password\": \"rcon_password \\\"{{server.build.env.RCON_PW}}\\\"\",\r\n            \"sv_password\": \"sv_password \\\"{{server.build.env.SV_PASS}}\\\"\",\r\n            \"sv_contact\": \"sv_contact \\\"{{server.build.env.SV_CONTACT}}\\\"\",\r\n            \"sv_region\": \"sv_region \\\"{{server.build.env.SV_REGION}}\\\"\",\r\n            \"tv_name\": \"tv_name \\\"{{server.build.env.TV_NAME}}\\\"\",\r\n            \"tv_password\": \"tv_password \\\"{{server.build.env.TV_PASS}}\\\"\",\r\n            \"tv_maxclients\": \"tv_maxclients \\\"{{server.build.env.TV_CLIENT}}\\\"\",\r\n            \"fps_max\": \"fps_max \\\"400\\\"\",\r\n            \"sv_minrate\": \"sv_minrate {{server.build.env.RATE}}000\",\r\n            \"sv_minupdaterate\": \"sv_minupdaterate {{server.build.env.RATE}}\",\r\n            \"sv_maxupdaterate\": \"sv_maxupdaterate {{server.build.env.RATE}}\",\r\n            \"sv_mincmdrate\": \"sv_mincmdrate {{server.build.env.RATE}}\",\r\n            \"sv_tags \": \"sv_tags \\\"{{server.build.env.TAGS}},ztormax\\\"\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Connection to Steam servers successful\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\n\r\n## just in case someone removed the defaults.\r\nif [ \"${STEAM_USER}\" == \"\" ]; then\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\nmkdir -p \/mnt\/server\/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n\r\n## install game using steamcmd\r\n.\/steamcmd.sh +force_install_dir \/mnt\/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +app_update ${SRCDS_APPID} ${EXTRA_FLAGS} +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\n# -------------\r\n# ADDED INSTALL\r\n# -------------\r\n\r\n# dowloading some cfg files for the server\r\ncd \/mnt\/server\/csgo\/cfg\/\r\ncurl -sSL -o server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/server.cfg\r\necho \"Server config have been written!\"\r\necho \r\ncurl -sSL -o gamemode_armsrace_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_armsrace_server.cfg\r\ncurl -sSL -o gamemode_casual_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_casual_server.cfg\r\ncurl -sSL -o gamemode_competitive2v2_offline_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_competitive2v2_offline_server.cfg\r\ncurl -sSL -o gamemode_competitive2v2_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_competitive2v2_server.cfg\r\ncurl -sSL -o gamemode_competitive_offline_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_competitive_offline_server.cfg\r\necho \"Gamemode Configs have been written!(PART 1\/4)\"\r\n\r\ncurl -sSL -o gamemode_competitive_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_competitive_server.cfg\r\ncurl -sSL -o gamemode_competitive_short_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_competitive_short_server.cfg\r\ncurl -sSL -o gamemode_cooperative_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_cooperative_server.cfg\r\ncurl -sSL -o gamemode_coopmission_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_coopmission_server.cfg\r\ncurl -sSL -o gamemode_custom_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_custom_server.cfg\r\necho \"Gamemode Configs have been written!(PART 2\/4)\"\r\n\r\ncurl -sSL -o gamemode_deathmatch_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_deathmatch_server.cfg\r\ncurl -sSL -o gamemode_deathmatch_short_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_deathmatch_short_server.cfg\r\ncurl -sSL -o gamemode_deathmatch_tmm_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_deathmatch_tmm_server.cfg\r\ncurl -sSL -o gamemode_demolition_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_demolition_server.cfg\r\ncurl -sSL -o gamemode_dm_freeforall_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_dm_freeforall_server.cfg\r\necho \"Gamemode Configs have been written!(PART 3\/4)\"\r\n\r\ncurl -sSL -o gamemode_retakecasual_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_retakecasual_server.cfg\r\ncurl -sSL -o gamemode_survival_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_survival_server.cfg\r\ncurl -sSL -o gamemode_teamdeathmatch_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_teamdeathmatch_server.cfg\r\ncurl -sSL -o gamemode_training_server.cfg https:\/\/github.com\/Mashlex\/CSGO-Server-Setup\/blob\/d2f1040786d089dcede843ac81d8e83171f06065\/cfg\/gamemode_training_server.cfg\r\necho \"Gamemode Configs have been written!(PART 4\/4)\"\r\n\r\necho \"---------------------------------\"\r\necho\r\necho \"Configs have been written!\"\r\necho\r\n\r\n# Script for Autoupdate\r\ncd \/mnt\/server\/\r\ncat <<EOF > update.txt\r\n\/\/ update.txt\r\n\/\/\r\n@ShutdownOnFailedCommand 1 \/\/set to 0 if updating multiple servers at once\r\n@NoPromptForPassword 1\r\nlogin anonymous \r\nforce_install_dir ..\/\r\napp_update 740\r\nquit\r\nEOF\r\n\r\necho \"update.txt has been written!\"\r\necho",
+            "container": "ghcr.io\/pterodactyl\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Game Server Token",
+            "description": "The Steam Account Token required for the server to be displayed publicly. https:\/\/steamcommunity.com\/dev\/managegameservers",
+            "env_variable": "STEAM_ACC",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:32",
+            "field_type": "text"
+        },
+        {
+            "name": "AppID",
+            "description": "This is the Steam Game ID.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "740",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|in:740",
+            "field_type": "text"
+        },
+        {
+            "name": "Client Port",
+            "description": "Serverport + 1 \r\nADMIN ONLY!",
+            "env_variable": "CLIENT_PORT",
+            "default_value": "27005",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:50000",
+            "field_type": "text"
+        },
+        {
+            "name": "GOTV Port",
+            "description": "Serverport + 2 \r\nIf is this enabled, you can use that port to join the GOTV.",
+            "env_variable": "GOTV_PORT",
+            "default_value": "27020",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:50000",
+            "field_type": "text"
+        },
+        {
+            "name": "VAC Port (Steam)",
+            "description": "Serverport + 3 \r\nADMIN ONLY!",
+            "env_variable": "STEAM_PORT",
+            "default_value": "26900",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:50000",
+            "field_type": "text"
+        },
+        {
+            "name": "Tickrate",
+            "description": "The tick rate of the server, according to the possibilities of the order. 64 or 128 are possible. \r\nORDER CONFIG!",
+            "env_variable": "RATE",
+            "default_value": "64",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|in:64,128",
+            "field_type": "text"
+        },
+        {
+            "name": "Slots",
+            "description": "The amount of players, who can join the server. \r\nORDER CONFIG!",
+            "env_variable": "SLOTS",
+            "default_value": "16",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:32",
+            "field_type": "text"
+        },
+        {
+            "name": "Servername",
+            "description": "This is the servername.",
+            "env_variable": "HOSTNAME",
+            "default_value": "CSGO Gameserver",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:30",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Tags",
+            "description": "This command sets the server's tags that show in the community server browser. Separate each tag with a comma.",
+            "env_variable": "TAGS",
+            "default_value": "csgo",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:50",
+            "field_type": "text"
+        },
+        {
+            "name": "Rcon Password",
+            "description": "Rcon Password to control the Server online. For your security, change the password.",
+            "env_variable": "RCON_PW",
+            "default_value": "secretpassword11",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|min:8",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Password",
+            "description": "This is the password to join the server. If the field is left empty, you can join the server without a password.",
+            "env_variable": "SV_PASS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Contact E-Mail",
+            "description": "The contact email of the server admin.",
+            "env_variable": "SV_CONTACT",
+            "default_value": "default@email.com",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|email|max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "Startmap",
+            "description": "This is the Startmap. If you added a Workshop Collection, you must enter the Map ID.",
+            "env_variable": "SRCDS_MAP",
+            "default_value": "de_dust2",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Gametype",
+            "description": "Select the Gametype and the Gamemode to chance mode , which do you want to play.\r\n\r\nType\/Mode: 0\/0 Casual | 0\/1 Competitive | 0\/2 Wingman 2v2 | 0\/3 Weapons Expert 5v5 | 1\/0 Arms Race | 1\/1 Demolition | 1\/2 Deathmatch | 2\/0 Training  | 3\/0 Custom | 4\/0 Cooperative | 4\/1 Coop Strike | 5\/0 Wargames (Skirmish) | 6\/0 Danger Zone",
+            "env_variable": "GTYPE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|in:0,1,2,3,4,5,6",
+            "field_type": "text"
+        },
+        {
+            "name": "Gamemode",
+            "description": "Select the Gametype and the Gamemode to chance mode , which do you want to play.\r\n\r\nType\/Mode: 0\/0 Casual | 0\/1 Competitive | 0\/2 Wingman 2v2 | 0\/3 Weapons Expert 5v5 | 1\/0 Arms Race | 1\/1 Demolition | 1\/2 Deathmatch | 2\/0 Training  | 3\/0 Custom | 4\/0 Cooperative | 4\/1 Coop Strike | 5\/0 Wargames (Skirmish) | 6\/0 Danger Zone",
+            "env_variable": "GMODE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|in:0,1,2,3",
+            "field_type": "text"
+        },
+        {
+            "name": "Skirnish",
+            "description": "Added the Skirmish ID, to expand the versions of Gamemode, like FFA.\r\n\r\nNone Mode: 0 = default |\r\nCasual Mode: 1 = Stab Stab Zap, 3 = Flyingscoutman, 4 = Trigger Discipline, 8 = Heavy Assault Suit, 12 = Retakes |\r\nDeathmatch Mode: 2 = Free For All, 6 = Boom Headshot, 7 = Hunter-Gatherers |\r\nArms Race: 10 = Arms Race |\r\nDemoliton: 11 = Demoliton",
+            "env_variable": "SKIRMISH",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|in:0,1,2,3,4,5,6,7,8,9,10,11,12",
+            "field_type": "text"
+        },
+        {
+            "name": "HLTV",
+            "description": "Leave Blank to activate GOTV. ORDER CONFIG!",
+            "env_variable": "HLTV",
+            "default_value": "-nohltv",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "in:,-nohltv",
+            "field_type": "text"
+        },
+        {
+            "name": "GOTV Name",
+            "description": "The displayed name when the GOTV is called.",
+            "env_variable": "TV_NAME",
+            "default_value": "CSGO TV",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:30",
+            "field_type": "text"
+        },
+        {
+            "name": "GOTV Password",
+            "description": "This is the password to join the GOTV. If the field is left blank, you can join the GOTV without a password.",
+            "env_variable": "TV_PASS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:30",
+            "field_type": "text"
+        },
+        {
+            "name": "GOTV Title",
+            "description": "This is the description of the GOTV stream.",
+            "env_variable": "TV_TITLE",
+            "default_value": "This is a GOTV!",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "GOTV Slots",
+            "description": "This is the number of slots that can join the GOTV. \r\nORDER CONFIG!",
+            "env_variable": "TV_CLIENT",
+            "default_value": "10",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:32",
+            "field_type": "text"
+        },
+        {
+            "name": "API Authentification Key",
+            "description": "Key to use the Steam Workshop. https:\/\/steamcommunity.com\/login\/home\/?goto=%2Fdev%2Fapikey\r\nYou must use the adress of the Gameserver without port.",
+            "env_variable": "AUTH_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:32",
+            "field_type": "text"
+        },
+        {
+            "name": "Workshop Collection ID",
+            "description": "If you want to use workshop items, you need to add the ID of the collection.",
+            "env_variable": "WORKSHOP",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:20",
+            "field_type": "text"
+        }
+    ]
+}
